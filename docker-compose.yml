@@ -1,0 +1,34 @@
+version: "2"
+
+services:
+  sender:
+    build: sender/
+    container_name: sender
+    restart: always
+    depends_on:
+      - redis
+    volumes:
+      - ./sender:/opt/src
+      - /opt/src/node_modules
+    environment:
+      NODE_ENV: development
+
+  receiver:
+    build: receiver/
+    container_name: receiver
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - 3000:3000
+    volumes:
+      - ./receiver:/opt/src
+      - /opt/src/node_modules
+    environment:
+      NODE_ENV: development
+
+  redis:
+    image: redis:latest
+    container_name: redis-pubsub
+    ports:
+      - 6379:6379

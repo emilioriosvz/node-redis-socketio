@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html ng-app="app">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="Socket IO">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Noto+Serif">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/angular-mapboxgl-directive/0.18.2/angular-mapboxgl-directive.min.css">
+    <link rel="stylesheet" type="text/css" href="https://api.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.min.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v0.29.0/mapbox-gl.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-mapboxgl-directive/0.18.2/angular-mapboxgl-directive.min.js"></script>
+
+    <style>
+      .marker {
+          display: block;
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          padding: 0;
+      }
+    </style>
+
+    <script>
+      angular.module('app', ['mapboxgl-directive'])
+
+      .constant('io', io)
+      .constant('mapboxgl', mapboxgl)
+
+      .config(['$compileProvider', function ($compileProvider) {
+        // Needed for routing to work
+        $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|file|tel):/);
+      }])
+
+      .run(['mapboxgl', function (mapboxgl) {
+        mapboxgl.accessToken = 'pk.eyJ1IjoibmFpbWlrYW4iLCJhIjoiY2lraXJkOXFjMDA0OXdhbTYzNTE0b2NtbiJ9.O64XgZQHNHcV2gwNLN2a0Q';
+      }])
+
+      .controller('IndexController', ['$scope', 'io', function ($scope, io) {
+        function createDomElement () {
+          var markerDomElement = document.createElement('div');
+          markerDomElement.className = 'marker';
+          markerDomElement.style.backgroundImage = 'url(http://lorempixel.com/50/50/)';
+          markerDomElement.style.width = '50px';
+          markerDomElement.style.height = '50px';
+
+          return markerDomElement;
+        }
+        $scope.selectedChannel = 'project-123';
+        $scope.glMarkers = [];
+
+        var socket = io('http://localhost:3000');
+
+        socket.on($scope.selectedChannel, function (data) {
+          $scope.$apply(function () {
+            var domElement = createDomElement();
+
+            $scope.glMarkers.push({
+              coordinates: data.geo,
+              element: domElement
+            });
+          });
+        });
+      }]);
+    </script>
+
+    <title>Socket IO</title>
+  </head>
+
+  <body ng-controller="IndexController">
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        Panel Title
+      </div>
+
+      <div class="panel-body">
+        <!--<input type="text" ng-model="selectedChannel" />-->
+        <pre ng-bind="selectedChannel"></pre>
+        <div mapboxgl gl-markers="glMarkers"></div>
+      </div>
+    </div>
+  </body>
+</html>
